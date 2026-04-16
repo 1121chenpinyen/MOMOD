@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "name": "小狗狗",
+    "type": "dog",
+    "hunger": 50,
+    "happiness": 50,
+    "image": "./assets/pets/dog.png"
+  },
+  {
+    "id": 2,
+    "name": "小貓貓",
+    "type": "cat",
+    "hunger": 50,
+    "happiness": 50,
+    "image": "./assets/pets/cat.png"
+  }
+]
