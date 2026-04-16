@@ -5,6 +5,7 @@ import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { getPets, updatePet, getGlobalData, updateGlobalData } from '../utils/storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { DeviceEventEmitter } from 'react-native';
 
 // 靜態資源定義
 const catFoodImage = require('../assets/food/cat_food.png');
@@ -86,54 +87,68 @@ export default function ShopScreen({ visible, onClose, petId, deviceId }) {
       return;
     }
 
-    // 💡 計算扣錢後的新餘額
+    // 1. 先算出新的金錢餘額
     const newMoneyBalance = globalData.money - totalPrice;
 
-    // 💡 同步更新 Firebase (雲端大帳本)
-    // 假設你的 deviceId 已經透過 props 或 context 傳入此組件
-    try {
-      const profileRef = doc(db, 'profiles', deviceId); 
-      await updateDoc(profileRef, { money: newMoneyBalance });
-    } catch (error) {
-      console.error("雲端金錢同步失敗:", error);
-      // 這裡可以選擇是否要 Alert 告知使用者網路異常
-    }
+    // 2. 準備要更新的資料物件 (這就是你之前缺少的變數定義)
+    let updatedData = {
+      ...globalData,
+      money: newMoneyBalance
+    };
 
+    // 3. 根據類型添加 食物數量 或 玩具清單
     if (selectedItem.category === 'food') {
       const foodKey = selectedItem.foodType === 'cat' ? 'catFoodCount' : 'dogFoodCount';
       const currentCount = globalData[foodKey] || 0;
+      
       if (currentCount + qty > 999) {
         Alert.alert('飼料數量不能超過999個');
         return;
       }
+      
+      // 更新物件中的數量
+      updatedData[foodKey] = currentCount + qty;
 
-      const newGlobalData = {
-        ...globalData,
-        money: newMoneyBalance, // ✅ 使用新餘額
-        [foodKey]: currentCount + qty
-      };
-
-      await updateGlobalData(newGlobalData);
-      if (mountedRef.current) {
-        setGlobalData(newGlobalData);
-      }
-      Alert.alert(`購買成功！獲得 ${qty} 個${selectedItem.name}`);
     } else if (selectedItem.category === 'toy') {
-      const newGlobalData = {
-        ...globalData,
-        money: newMoneyBalance, // ✅ 使用新餘額
-        toys: [...(globalData.toys || []), { name: selectedItem.name.trim(), image: selectedItem.image }]
-      };
-
-      await updateGlobalData(newGlobalData);
-      if (mountedRef.current) {
-        setGlobalData(newGlobalData);
-      }
-      Alert.alert(`購買成功！獲得 ${selectedItem.name}`);
+      // 更新物件中的玩具列表
+      updatedData.toys = [
+        ...(globalData.toys || []), 
+        { name: selectedItem.name.trim(), image: selectedItem.image }
+      ];
     }
 
-    setQuantityModalVisible(false);
-    setSelectedItem(null);
+    // 4. 正式執行更新 (本地儲存)
+    try {
+      await updateGlobalData(updatedData);
+      
+      // 5. 同步更新 Firebase
+      if (deviceId) {
+        const profileRef = doc(db, 'profiles', deviceId);
+        await updateDoc(profileRef, { money: newMoneyBalance });
+      }
+
+      // 6. 更新成功後的處理
+      if (mountedRef.current) {
+        setGlobalData(updatedData);
+      }
+
+      // 📢 廣播訊號給 PetScreen
+      DeviceEventEmitter.emit('refreshFood');
+
+      Alert.alert(
+        selectedItem.category === 'food' 
+        ? `購買成功！獲得 ${qty} 個${selectedItem.name}` 
+        : `購買成功！獲得 ${selectedItem.name}`
+      );
+
+      // 關閉視窗
+      setQuantityModalVisible(false);
+      setSelectedItem(null);
+
+    } catch (error) {
+      console.error("購買更新失敗:", error);
+      Alert.alert("交易失敗，請稍後再試");
+    }
   };
 
   const earnMoney = async () => {
@@ -399,7 +414,7 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 15,
-    backgroundColor: '#3498db',
+    backgroundColor: '#76B8D0',
     borderRadius: 10,
     alignItems: 'center',
   },
@@ -458,7 +473,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#ff6b6b',
+    backgroundColor: '#EDB4B7',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -466,7 +481,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#27ae60',
+    backgroundColor: '#A1CD82',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -491,7 +506,7 @@ const styles = StyleSheet.create({
   totalText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#ff6b6b',
+    color: '#EDB4B7',
   },
   modalButtons: {
     flexDirection: 'row',
@@ -511,7 +526,7 @@ const styles = StyleSheet.create({
   confirmButton: {
     paddingVertical: 12,
     paddingHorizontal: 24,
-    backgroundColor: '#27ae60',
+    backgroundColor: '#A1CD82',
     borderRadius: 10,
   },
   confirmText: {
