@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView, Image, FlatList, Modal } from 'react-native';
 import Slider from '@react-native-community/slider';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { getPets, updatePet, getGlobalData, updateGlobalData } from '../utils/storage';
+import { useRouter } from 'expo-router';
 import { doc, updateDoc } from 'firebase/firestore';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, DeviceEventEmitter, FlatList, Image, Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { db } from '../config/firebaseConfig';
-import { DeviceEventEmitter } from 'react-native';
+import { getGlobalData, getPets, updateGlobalData } from '../utils/storage';
 
 // 靜態資源定義
 const catFoodImage = require('../assets/food/cat_food.png');
