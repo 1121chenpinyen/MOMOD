@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { View, Text, Image, ImageBackground, StyleSheet, Pressable, Alert, Modal, FlatList, DeviceEventEmitter } from 'react-native';
-import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { initPets, getPets, updatePet, getGlobalData, updateGlobalData } from '../../utils/storage';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Alert, DeviceEventEmitter, FlatList, Image, ImageBackground, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import ShopScreen from '../../components/shopscreen';
-import { getDeviceId } from '../../utils/getDeviceId'; 
+import { getDeviceId } from '../../utils/getDeviceId';
+import { getGlobalData, getPets, initPets, updateGlobalData, updatePet } from '../../utils/storage';
 
 // 靜態資源定義
 const backgroundImage = require('../../assets/background/background.png');
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
   expBarFill: { height: '100%', backgroundColor: '#ca823ed2' },
   shop_icon: { width: 70, height: 70, resizeMode: 'contain' },
   statusActions: { flexDirection: 'row', gap: 10, marginTop: 10 },
-  switch_icon: { width: 20, height: 20, resizeMode: 'contain' },
+  switch_icon: { backgroundColor: '#fff', borderRadius: 20, padding: 10, width: 40, height: 40, resizeMode: 'contain' },
   shopButton: { padding: 8, borderRadius: 20, right: 10, top: 150, position: 'absolute', zIndex: 1 },
   petContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 60, paddingBottom: 100 },
   petContent: { justifyContent: 'center', alignItems: 'center' },
